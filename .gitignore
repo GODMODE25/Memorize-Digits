@@ -1,0 +1,10 @@
+node_modules/
+dist/
+dist-react/
+dist-electron/
+build/
+*.log
+.DS_Store
+.env
+.vscode/
+coverage/

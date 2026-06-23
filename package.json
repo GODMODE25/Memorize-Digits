@@ -1,0 +1,51 @@
+{
+  "name": "digit-memory-trainer",
+  "version": "1.0.0",
+  "description": "A progressive memory training app for digit sequences",
+  "main": "electron/main.ts",
+  "scripts": {
+    "dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "build": "vite build && electron-builder",
+    "start": "electron ."
+  },
+  "dependencies": {
+    "electron": "^25.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "typescript": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/electron": "^1.4.38",
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "^4.7.0",
+    "autoprefixer": "^10.0.0",
+    "concurrently": "^8.0.0",
+    "electron-builder": "^24.0.0",
+    "postcss": "^8.0.0",
+    "tailwindcss": "^3.0.0",
+    "vite": "^4.0.0",
+    "wait-on": "^7.0.0"
+  },
+  "build": {
+    "appId": "com.digitmemorytrainer.app",
+    "productName": "Digit Memory Trainer",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "dist-react/**/*",
+      "electron/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.games"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  }
+}
