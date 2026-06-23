@@ -39,6 +39,7 @@ export const createDefaultProfile = (username: string): Profile => {
     assistEnabled: true,
     emoji: PROFILE_EMOJIS[Math.floor(Math.random() * PROFILE_EMOJIS.length)],
     keypadEnabled: true,
+    practiceTimerEnabled: true,
     createdTime: Date.now(),
   };
 };
@@ -58,6 +59,7 @@ export function loadProfiles(): Profile[] {
           ...p,
           emoji: p.emoji || PROFILE_EMOJIS[Math.floor(Math.random() * PROFILE_EMOJIS.length)],
           keypadEnabled: p.keypadEnabled !== undefined ? p.keypadEnabled : true,
+          practiceTimerEnabled: p.practiceTimerEnabled !== undefined ? p.practiceTimerEnabled : true,
           dailyQuest: quest,
         };
       });

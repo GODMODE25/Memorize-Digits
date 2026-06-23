@@ -50,6 +50,7 @@ export interface Profile {
   assistEnabled: boolean;
   emoji: string;
   keypadEnabled: boolean;
+  practiceTimerEnabled: boolean;
   createdTime: number;
 }
 

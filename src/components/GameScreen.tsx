@@ -92,7 +92,8 @@ const GameScreen: React.FC<GameScreenProps> = ({
 
   // Reset challenge on mount or restart
   useEffect(() => {
-    const chall = generateChallenge(mode, digitCount);
+    const generationMode = mode === 'Flash Cards' ? 'Numbers' : mode;
+    const chall = generateChallenge(generationMode, digitCount);
     setChallenge(chall);
     setPhase('memorizing');
     setUserInput('');
@@ -127,7 +128,12 @@ const GameScreen: React.FC<GameScreenProps> = ({
   }, [phase, isPaused]);
 
   const handleMemorizeComplete = () => {
-    setPhase('hidden');
+    if (timerEnabled) {
+      setPhase('hidden');
+    } else {
+      // Skip the hidden phase entirely when timer is disabled
+      setPhase('inputting');
+    }
   };
 
   const handleHiddenComplete = () => {
@@ -135,7 +141,8 @@ const GameScreen: React.FC<GameScreenProps> = ({
   };
 
   const handleSubmit = (input: string) => {
-    const comp = checkAnswer(input, challenge, mode);
+    const checkMode = mode === 'Flash Cards' ? 'Numbers' : mode;
+    const comp = checkAnswer(input, challenge, checkMode);
     const calculated = calculateScore(
       comp.correctDigits,
       comp.totalDigits,
@@ -292,7 +299,7 @@ const GameScreen: React.FC<GameScreenProps> = ({
             <button
               onClick={() => {
                 audioEngine.playClick();
-                const chall = generateChallenge(mode, digitCount);
+                const chall = generateChallenge(mode === 'Flash Cards' ? 'Numbers' : mode, digitCount);
                 setChallenge(chall);
                 setPhase('memorizing');
                 setUserInput('');

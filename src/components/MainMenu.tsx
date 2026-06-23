@@ -29,7 +29,7 @@ const MainMenu: React.FC<MainMenuProps> = ({ profile, onLevelSelect, onContinueC
   const [practiceDisplayTime, setPracticeDisplayTime] = useState(3.0);
   const [practiceRecallTime, setPracticeRecallTime] = useState(9.0);
   const [practiceAssist, setPracticeAssist] = useState(profile.assistEnabled);
-  const [practiceTimerEnabled, setPracticeTimerEnabled] = useState(true);
+  const [practiceTimerEnabled, setPracticeTimerEnabled] = useState(profile.practiceTimerEnabled);
   const [taDifficulty, setTaDifficulty] = useState('Medium');
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -143,7 +143,7 @@ const MainMenu: React.FC<MainMenuProps> = ({ profile, onLevelSelect, onContinueC
                   <div className="flex justify-between text-[9px] font-bold text-theme-muted uppercase"><span>Recall</span><span>{practiceRecallTime.toFixed(1)}s</span></div>
                   <input type="range" min={3} max={30} step={0.5} value={practiceRecallTime} onChange={e => setPracticeRecallTime(parseFloat(e.target.value))} className="w-full accent-[var(--color-primary)] cursor-pointer" />
                   <div className="flex items-center justify-between"><span className="text-[9px] font-bold text-theme-muted uppercase">Visual Assist</span><input type="checkbox" checked={practiceAssist} onChange={e => handleAssistToggle(e.target.checked)} className="w-4 h-4 accent-[var(--color-primary)] cursor-pointer" /></div>
-                  <div className="flex items-center justify-between"><span className="text-[9px] font-bold text-theme-muted uppercase">Enable Timer</span><input type="checkbox" checked={practiceTimerEnabled} onChange={e => setPracticeTimerEnabled(e.target.checked)} className="w-4 h-4 accent-[var(--color-primary)] cursor-pointer" /></div>
+                  <div className="flex items-center justify-between"><span className="text-[9px] font-bold text-theme-muted uppercase">Enable Timer</span><input type="checkbox" checked={practiceTimerEnabled} onChange={e => { const v = e.target.checked; setPracticeTimerEnabled(v); onProfileUpdate({ ...profile, practiceTimerEnabled: v }); }} className="w-4 h-4 accent-[var(--color-primary)] cursor-pointer" /></div>
                 </div>
                 <button onClick={() => { audioEngine.playClick(); onStartPractice(practiceMode, practiceDifficulty, practiceDisplayTime, practiceRecallTime, practiceAssist, practiceTimerEnabled); }} className="w-full bg-theme-primary hover:opacity-90 text-white font-bold py-2.5 rounded-xl shadow-theme-glow transition-all text-sm">Enter Practice</button>
               </div>
@@ -273,13 +273,13 @@ const MainMenu: React.FC<MainMenuProps> = ({ profile, onLevelSelect, onContinueC
               MEMORYMASTER
             </h2>
             <div className="inline-block bg-theme-primary/10 border border-theme-primary/20 text-theme-primary font-bold px-4 py-1.5 rounded-full text-sm">
-              v2.0.0 Stable
+              v2.4.0 Stable
             </div>
             <p className="text-theme-muted text-sm leading-relaxed">
               A procedural web-audio enabled memory trainer. Master the art of Chunking, Memory Palaces, and Story Linking to dramatically increase your short-term numeric retention capacity.
             </p>
             <div className="bg-theme-input p-4 rounded-xl border border-theme text-xs font-semibold text-theme-main">
-              Developed by <span className="text-theme-secondary">Samuel Musa</span> &amp; <span className="text-theme-accent">Antigravity</span>
+              Developed by <span className="text-theme-secondary">Samuel Musa</span> 
             </div>
             <p className="text-[10px] text-theme-muted uppercase tracking-wider">
               © 2026. All rights reserved.
@@ -288,7 +288,7 @@ const MainMenu: React.FC<MainMenuProps> = ({ profile, onLevelSelect, onContinueC
         )}
       </div>
 
-      <div className="max-w-7xl w-full mx-auto text-center text-[10px] text-theme-muted mt-6">Developed by Samuel Musa &amp; Antigravity © 2026.</div>
+      <div className="max-w-7xl w-full mx-auto text-center text-[10px] text-theme-muted mt-6">Developed by Samuel Musa © 2026.</div>
     </div>
   );
 };
