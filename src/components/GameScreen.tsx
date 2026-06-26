@@ -38,6 +38,19 @@ const FLASH_CARDS: Record<string, string> = {
   '9': '🎈'
 };
 
+const FLASH_CARD_LABELS: Record<string, string> = {
+  '0': 'Egg',
+  '1': 'Candle',
+  '2': 'Swan',
+  '3': 'Trident',
+  '4': 'Sail',
+  '5': 'Hook',
+  '6': 'Elephant',
+  '7': 'Axe',
+  '8': 'Snowman',
+  '9': 'Balloon'
+};
+
 const PALACE_LOCATIONS = ['🚪 Door', '🛋️ Sofa', '🍽️ Table', '🪟 Window', '🪜 Stairs', '📚 Shelf', '📺 TV', '🛏️ Bed', '🛁 Tub'];
 
 const GameScreen: React.FC<GameScreenProps> = ({
@@ -62,6 +75,9 @@ const GameScreen: React.FC<GameScreenProps> = ({
   const [hintMessage, setHintMessage] = useState<string>('');
   const [activeTechnique, setActiveTechnique] = useState<MnemonicTechnique>('Auto Coach');
   const [isPaused, setIsPaused] = useState<boolean>(false);
+  
+  const [currentFlashIndex, setCurrentFlashIndex] = useState<number>(0);
+  const [cardElapsed, setCardElapsed] = useState<number>(0);
 
   const inputTimeIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -101,12 +117,14 @@ const GameScreen: React.FC<GameScreenProps> = ({
     setHintsUsed(0);
     setHintMessage('');
     setIsPaused(false);
+    setCurrentFlashIndex(0);
+    setCardElapsed(0);
     
     if (inputTimeIntervalRef.current) {
       clearInterval(inputTimeIntervalRef.current);
       inputTimeIntervalRef.current = null;
     }
-  }, [playStyle, mode, level, difficulty, timeAttackState]);
+  }, [playStyle, mode, level, difficulty, timeAttackState, digitCount]);
 
   // Track user input speed in recall phase
   useEffect(() => {
@@ -126,6 +144,34 @@ const GameScreen: React.FC<GameScreenProps> = ({
       }
     };
   }, [phase, isPaused]);
+
+  // Calculate individual card display duration
+  const durationPerCard = actualDisplayTime / Math.max(1, digitCount);
+
+  // Auto-advance flashcards in Flash Cards mode when timer is enabled
+  useEffect(() => {
+    if (mode === 'Flash Cards' && phase === 'memorizing' && timerEnabled && !isPaused && challenge) {
+      const interval = setInterval(() => {
+        setCardElapsed(prev => {
+          const next = prev + 0.1;
+          if (next >= durationPerCard) {
+            setCurrentFlashIndex(idx => {
+              if (idx >= digitCount - 1) {
+                clearInterval(interval);
+                handleMemorizeComplete();
+                return idx;
+              }
+              audioEngine.playClick(); // subtle click sound during card transition
+              return idx + 1;
+            });
+            return 0;
+          }
+          return next;
+        });
+      }, 100);
+      return () => clearInterval(interval);
+    }
+  }, [mode, phase, timerEnabled, isPaused, challenge, durationPerCard, digitCount]);
 
   const handleMemorizeComplete = () => {
     if (timerEnabled) {
@@ -307,6 +353,8 @@ const GameScreen: React.FC<GameScreenProps> = ({
                 setHintsUsed(0);
                 setHintMessage('');
                 setIsPaused(false);
+                setCurrentFlashIndex(0);
+                setCardElapsed(0);
               }}
               className="bg-theme-input border border-theme px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-theme-card-hover transition-colors"
             >
@@ -354,7 +402,7 @@ const GameScreen: React.FC<GameScreenProps> = ({
           
           {/* Phase timers */}
           <div className="mb-6">
-            {phase === 'memorizing' && (
+            {phase === 'memorizing' && mode !== 'Flash Cards' && (
               timerEnabled ? (
                 <Timer mode="countdown" duration={actualDisplayTime} isPaused={isPaused} onComplete={handleMemorizeComplete} />
               ) : (
@@ -393,26 +441,103 @@ const GameScreen: React.FC<GameScreenProps> = ({
             ) : (
               <>
                 {phase === 'memorizing' && (
-                  <div className="text-center w-full">
-                    {/* Standard display or assisted chunks */}
-                    {assistEnabled ? (
-                      <div className="flex flex-wrap justify-center gap-4 max-w-xl mx-auto">
-                        {getAssistedChunks().map((chunk, idx) => (
-                          <div key={idx} className="flex flex-col items-center p-4 bg-theme-input border border-theme rounded-2xl min-w-[100px] shadow-sm">
-                            <span className="font-mono text-4xl font-extrabold text-theme-accent tracking-wide">
-                              {mode === 'Flash Cards' ? chunk.text.split('').map(c => FLASH_CARDS[c] || c).join(' ') : chunk.text}
-                            </span>
-                            <span className="text-[10px] font-bold text-theme-muted uppercase mt-2">
-                              {PALACE_LOCATIONS[chunk.index % PALACE_LOCATIONS.length]}
-                            </span>
+                  mode === 'Flash Cards' ? (
+                    <div className="flex flex-col items-center justify-center w-full">
+                      {/* Modern Glassmorphic Flash Card */}
+                      <div className="w-72 sm:w-80 h-96 bg-theme-card border border-theme rounded-3xl shadow-theme-glow relative overflow-hidden flex flex-col justify-between items-center p-8 text-center animate-fade-in transition-all">
+                        
+                        {/* Shrinking Progress Bar at the top of the card */}
+                        {timerEnabled && (
+                          <div className="absolute top-0 left-0 w-full h-1.5 bg-theme bg-opacity-20">
+                            <div 
+                              className="h-full bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)] transition-all duration-100 ease-linear"
+                              style={{ width: `${((durationPerCard - cardElapsed) / durationPerCard) * 100}%` }}
+                            />
                           </div>
+                        )}
+
+                        {/* Top corner card counter badge */}
+                        <div className="text-[10px] font-black text-theme-muted uppercase tracking-widest bg-theme-input px-3 py-1 rounded-full border border-theme self-end">
+                          Card {currentFlashIndex + 1} / {digitCount}
+                        </div>
+
+                        {/* Middle Visuals: Floating Emoji + Mapped Text */}
+                        <div className="flex flex-col items-center justify-center space-y-4 my-auto">
+                          <span className="text-8xl sm:text-9xl filter drop-shadow-lg transform hover:scale-110 transition-transform cursor-default select-none animate-bounce" style={{ animationDuration: '3s' }}>
+                            {FLASH_CARDS[challenge[currentFlashIndex]] || ''}
+                          </span>
+                          <div className="space-y-1">
+                            <h4 className="text-5xl font-black bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)] bg-clip-text text-transparent font-mono tracking-tight select-none">
+                              {challenge[currentFlashIndex]}
+                            </h4>
+                            <p className="text-xs font-bold text-theme-muted uppercase tracking-widest select-none">
+                              {FLASH_CARD_LABELS[challenge[currentFlashIndex]] || ''}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Bottom corner Location label helper (e.g. Memory Palace) */}
+                        {assistEnabled && (
+                          <div className="text-[9px] font-bold text-theme-muted uppercase tracking-wider bg-theme-input/40 px-2.5 py-1 rounded-lg border border-theme/50 w-full">
+                            Location: {PALACE_LOCATIONS[currentFlashIndex % PALACE_LOCATIONS.length]}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Dots progress indicator */}
+                      <div className="flex justify-center flex-wrap gap-2 mt-6 max-w-xs sm:max-w-md">
+                        {challenge.split('').map((_, idx) => (
+                          <div 
+                            key={idx}
+                            className={`h-2.5 rounded-full transition-all duration-300 ${
+                              idx === currentFlashIndex 
+                                ? 'w-6 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)] shadow-theme-glow' 
+                                : idx < currentFlashIndex 
+                                  ? 'w-2.5 bg-[var(--color-primary)] opacity-60' 
+                                  : 'w-2.5 bg-theme-input border border-theme'
+                            }`}
+                          />
                         ))}
                       </div>
-                    ) : (
-                      <NumberDisplay number={mode === 'Flash Cards' ? challenge.split('').map(c => FLASH_CARDS[c] || c).join(' ') : challenge} isVisible={true} animated={true} />
-                    )}
-                    <p className="text-xs text-theme-muted uppercase font-bold tracking-widest mt-6">Memorize the sequence</p>
-                  </div>
+
+                      {/* Manual Next Button (if timer is disabled) */}
+                      {!timerEnabled && (
+                        <button
+                          onClick={() => {
+                            audioEngine.playClick();
+                            if (currentFlashIndex < digitCount - 1) {
+                              setCurrentFlashIndex(prev => prev + 1);
+                            } else {
+                              handleMemorizeComplete();
+                            }
+                          }}
+                          className="mt-6 px-8 py-3 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)] hover:opacity-90 text-white font-bold rounded-2xl shadow-theme-glow transition-all uppercase tracking-wider text-xs flex items-center gap-1.5"
+                        >
+                          {currentFlashIndex < digitCount - 1 ? 'Next Card' : 'Start Recall'}
+                          <span>➔</span>
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center w-full">
+                      {/* Standard display or assisted chunks */}
+                      {assistEnabled ? (
+                        <div className="flex flex-wrap justify-center gap-4 max-w-xl mx-auto">
+                          {getAssistedChunks().map((chunk, idx) => (
+                            <div key={idx} className="flex flex-col items-center p-4 bg-theme-input border border-theme rounded-2xl min-w-[100px] shadow-sm">
+                              <span className="font-mono text-4xl font-extrabold text-theme-accent tracking-wide">{chunk.text}</span>
+                              <span className="text-[10px] font-bold text-theme-muted uppercase mt-2">
+                                {PALACE_LOCATIONS[chunk.index % PALACE_LOCATIONS.length]}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <NumberDisplay number={challenge} isVisible={true} animated={true} />
+                      )}
+                      <p className="text-xs text-theme-muted uppercase font-bold tracking-widest mt-6">Memorize the sequence</p>
+                    </div>
+                  )
                 )}
 
                 {phase === 'hidden' && (
