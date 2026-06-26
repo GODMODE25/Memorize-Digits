@@ -100,7 +100,7 @@ const MainMenu: React.FC<MainMenuProps> = ({ profile, onLevelSelect, onContinueC
                     onClick={() => { audioEngine.playClick(); onContinueCampaign(); }}
                     className="bg-theme-primary hover:opacity-90 text-white text-[10px] font-bold uppercase tracking-wider px-4 py-2 rounded-xl shadow-theme-glow transition-all flex items-center"
                   >
-                    Continue Campaign <span className="ml-2 text-xs">▶</span>
+                    {profile.completedLevels.length === 0 ? 'Start Campaign' : 'Continue Campaign'} <span className="ml-2 text-xs">▶</span>
                   </button>
                 </div>
               </div>
